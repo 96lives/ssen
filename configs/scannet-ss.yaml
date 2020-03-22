@@ -1,0 +1,131 @@
+# ScanNet Instance segmentation config
+task: semantic-segmentation
+
+###########
+# Dataset #
+###########
+dataset: scannet-ss
+zero_mean_normalize: True
+remove_bg_with_pretrained: False
+y_c: 20
+
+valid_class_ids: [
+  1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
+  11, 12, 14, 16, 24, 28, 33, 34,
+  36, 39
+]
+class_labels: [
+  'wall', 'floor', 'cabinet', 'bed', 'chair',
+  'sofa', 'table', 'door', 'window', 'bookshelf',
+  'picture', 'counter', 'desk', 'curtain', 'refrigerator',
+  'shower curtain', 'toilet', 'sink', 'bathtub', 'otherfurniture'
+]
+train_root: ./data/scannet/scans
+val_root: ./data/scannet/scans
+train_list: ./data/scannet/scannet_train.txt
+val_list: ./data/scannet/scannet_val.txt
+tensor_postfix: _semantic_segment.pt
+
+epoch: 2000
+num_workers: 0
+max_train_sample:
+voxel_size: 0.02
+
+transform:
+  - type: ChromaticJitter
+    options:
+      scale: 0.03
+      clip: 0.05
+  - type: ChromaticTranslation
+    options:
+      scale: 0.1
+  - type: CoordScaleRotate
+    options:
+      scale_max: 0.1 # scale from [0.9, 1.1]
+      rot_x_scale: 0.027 # 5 / 180
+      rot_x_clip: 0.055 # 10 / 180
+      auto_rotate_axis: z
+  - type: CoordFlip
+  - type: CoordTranslation
+    options:
+      max: 0.02
+
+
+#########
+# Model #
+#########
+model: semantic-segmentation-model
+backbone:
+  name: Mink16UNet34C
+  conv1_kernel_size: 3
+  init_pretrained:
+    path: ./data/models/Mink16UNet34C_ScanNet.pth
+    strict: True
+  in_channels: 3
+
+
+#########
+# Train #
+#########
+# catch exception when gpu overflow occurs, note that this catches all the gpu overflow
+# when debugging, set this to false
+skip_gpu_overflow: True
+
+batch_size: 5
+acc_batch_step: 2 # batch size = batch_size * acc_batch_step
+
+optimizer:
+  type: Adam
+  options:
+    lr: 0.0001
+    weight_decay: 0.
+
+clip_grad:
+  type: norm
+  options:
+    max_norm: 0.5
+
+lr_scheduler:
+  type: StepLR
+  options:
+    step_size: 2000
+    gamma: 0.8
+
+###########
+# Summary #
+###########
+summary_step: 100
+ckpt_step: 1000
+
+# Visualization
+color_map: hsv
+vis:
+  scene_names: ['scene0231_01', 'scene0095_00', 'scene0474_00']
+
+#########
+# Utils #
+#########
+device: cuda
+seed: 0
+
+#########
+# Debug #
+#########
+# every step is visualized
+debug_vis: False
+# every step is evaluated
+debug_eval: False
+overfit_one_ex: False
+
+#########
+# Links #
+#########
+# http://kaldir.vc.in.tum.de/scannet_browse/scans/simple-viewer?palette=d3_unknown_category19p&modelId=scannetv2.scene0231_01
+
+###########
+# Evaluate #
+############
+eval_step: 1000
+eval_batch_size: 4
+eval_bg_acc: True
+eval_mode: []

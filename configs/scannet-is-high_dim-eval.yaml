@@ -1,0 +1,179 @@
+# ScanNet Instance segmentation config
+task: instance-segmentation
+
+
+###########
+# Dataset #
+###########
+dataset: scannet-is
+zero_mean_normalize: True
+remove_bg_with_pretrained: True
+
+valid_class_ids: [
+  1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
+  11, 12, 14, 16, 24, 28, 33, 34,
+  36, 39
+]
+class_labels: [
+  'wall', 'floor', 'cabinet', 'bed', 'chair',
+  'sofa', 'table', 'door', 'window', 'bookshelf',
+  'picture', 'counter', 'desk', 'curtain', 'refrigerator',
+  'shower curtain', 'toilet', 'sink', 'bathtub', 'otherfurniture'
+]
+train_root: ./data/scannet/scans
+val_root: ./data/scannet/scans
+train_list: ./data/scannet/scannet_train.txt
+val_list: ./data/scannet/scannet_val.txt
+tensor_postfix: _semantic_segment.pt
+
+epoch: 2000
+num_workers: 0
+max_train_sample:
+voxel_size: 0.02
+
+
+transform:
+  - type: ChromaticJitter
+    options:
+      scale: 0.03
+      clip: 0.05
+  - type: ChromaticTranslation
+    options:
+      scale: 0.1
+  - type: CoordScaleRotate
+    options:
+      scale_max: 0.1 # scale from [0.9, 1.1]
+      rot_x_scale: 0.027 # 5 / 180
+      rot_x_clip: 0.055 # 10 / 180
+      auto_rotate_axis: z
+  - type: CoordFlip
+  - type: CoordTranslation
+    options:
+      max: 0.02
+
+
+#########
+# Model #
+#########
+model: instance-segmentation-model
+y_c: 20
+
+backbone:
+  name: Mink16UNet34C
+  conv1_kernel_size: 3
+  init_pretrained:
+    path: ./data/models/instance_model.pt
+    strict: False
+  in_channels: 3
+  emb_dim: 8 # dimension of embedding
+semantic_model:
+  path: ./data/models/semantic_model.pt
+  conv1_kernel_size: 5
+
+#########
+# Train #
+#########
+# catch exception when gpu overflow occurs, note that this catches all the gpu overflow
+# when debugging, set this to false
+skip_gpu_overflow: True
+
+batch_size: 8
+acc_batch_step: 1 # batch size = batch_size * acc_batch_step
+optimizer:
+  type: Adam
+  options:
+    lr: 0.0001
+    weight_decay: 0.
+
+clip_grad:
+  type: norm
+  options:
+    max_norm: 0.5
+
+lr_scheduler:
+  type: StepLR
+  options:
+    step_size: 10000
+    gamma: 0.8
+
+# threshold of embedding similarity
+emb_thres: 0.4
+
+
+loss:
+  # total loss = seed_loss + emb_loss_weight * emb_loss
+  # emb_loss = gamma_var * var_loss + gamma_dist *dist_loss + gamma_reg * reg_loss
+  gamma_inter: 1.
+  gamma_intra: 10.
+  gamma_reg: 0.
+  gamma_class: 0.
+  delta_inter: 0.1
+  delta_intra: 0.5
+  inter_chill: 1.
+
+###########
+# Summary #
+###########
+summary_step: 500
+ckpt_step: 1000
+
+# Visualization
+
+color_map: hsv
+# either list of specific indices or a number
+# if number, sample indices with equal interval w.r.t dataset
+
+vis:
+  scene_names: ['scene0231_01', 'scene0095_00', 'scene0474_00']
+  tsne:
+    step: 5000
+    max_sample: 10000
+    num_core: 16
+    num_iter: 1000
+
+
+#########
+# Utils #
+#########
+device: cuda
+seed: 0
+
+#########
+# Debug #
+#########
+# every step is visualized
+debug_vis: False
+# every step is evaluated
+debug_eval: False
+overfit_one_ex: False
+
+#########
+# Links #
+#########
+# http://kaldir.vc.in.tum.de/scannet_browse/scans/simple-viewer?palette=d3_unknown_category19p&modelId=scannetv2.scene0231_01
+
+
+############
+# Evaluate #
+############
+eval_step: 5000
+eval_batch_size: 16
+eval_mode: [] #, 'loss']
+scene: False
+#scene: scene0231_00
+eval_name: test
+eval_rotate: 1
+test: False
+eval_io: True
+eval_tsne: False
+eval_print: False
+clustering:
+  name: hdbscan
+  min_cluster_size: 200
+  min_samples: 0
+  metric: euclidean
+  alpha: 1.
+  approx_min_span_tree: True
+  n_jobs: 6
+
+

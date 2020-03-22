@@ -1,0 +1,15 @@
+numpy
+open3d-python==0.5.0.0
+MulticoreTSNE
+cython
+scipy
+scikit-learn
+hdbscan
+matplotlib==3.1.2
+imageio
+tensorflow-cpu
+pyyaml
+tqdm
+future
+plyfile
+Pillow==6.1
