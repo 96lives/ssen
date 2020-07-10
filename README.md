@@ -1,5 +1,5 @@
 # Spatial Semantic Embedding Network
-This repository contains code for Spatial Semantic Embedding Network:Fast 3D Instance Segmentation with Deep Metric Learning (submitted to IROS 2020) by Dongsu Zhang, Junha Chun, Sang Kyun Cha, Young Min Kim.
+This repository contains code for [Spatial Semantic Embedding Network:Fast 3D Instance Segmentation with Deep Metric Learning](https://arxiv.org/abs/2007.03169) by Dongsu Zhang, Junha Chun, Sang Kyun Cha, Young Min Kim.
 We are currently 3rd place on [ScanNet 3D Instance Segmentation Challenge](http://kaldir.vc.in.tum.de/scannet_benchmark/index.php?metric=ap) on AP.
 ![SSEN](./images/method_overview.png)
 
@@ -88,5 +88,18 @@ For different training hyperparameters, you may change the configs in `configs/`
 For logging the training and visualizing the embedding space, run
 ```
 tensorboard --logdir log --port 8123
+```
+
+## Citing SSEN
+
+If you use the SSEN, please cite:
+- [Spatial Semantic Embedding Network:Fast 3D Instance Segmentation with Deep Metric Learning](https://arxiv.org/abs/2007.03169)
+```
+@inproceedings{zhang2020ssen,
+    author = {Zhang, Dongsu and Chun, Junha and Cha, Sang and Kim, Young Min},
+    title = "{Spatial Semantic Embedding Network: Fast 3D Instance Segmentation with Deep Metric Learning}",
+    booktitle={arXiv preprint arXiv:2007.03169},
+    year={2020}
+}
 ```
 
