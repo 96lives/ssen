@@ -12,4 +12,4 @@ pyyaml
 tqdm
 future
 plyfile
-Pillow==6.1
+Pillow==8.2.0
